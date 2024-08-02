@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="21507" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" launchScreen="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="01J-lp-oVM">
+    <device id="retina6_12" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="21505"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="System colors in document resources" minToolsVersion="11.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--View Controller-->
+        <scene sceneID="EHf-IW-A2E">
+            <objects>
+                <viewController id="01J-lp-oVM" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="Wtq-P6-n7w">
+                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        <subviews>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" image="LandingBackground" translatesAutoresizingMaskIntoConstraints="NO" id="SN8-Dn-4Di">
+                                <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <gestureRecognizers/>
+                            </imageView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" usesAttributedText="YES" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Zsu-HU-b9A">
+                                <rect key="frame" x="60" y="491.99999999999994" width="273" height="108.33333333333331"/>
+                                <attributedString key="attributedText">
+                                    <fragment content="PicSphere">
+                                        <attributes>
+                                            <color key="NSColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                            <font key="NSFont" size="32" name="Zapfino"/>
+                                            <paragraphStyle key="NSParagraphStyle" alignment="center" lineBreakMode="wordWrapping" baseWritingDirection="natural" tighteningFactorForTruncation="0.0"/>
+                                        </attributes>
+                                    </fragment>
+                                </attributedString>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" verticalCompressionResistancePriority="749" image="Logo" translatesAutoresizingMaskIntoConstraints="NO" id="ffF-nd-3oE">
+                                <rect key="frame" x="60" y="252" width="273" height="240"/>
+                            </imageView>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="9Ei-C9-4el"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <constraint firstItem="9Ei-C9-4el" firstAttribute="bottom" secondItem="Zsu-HU-b9A" secondAttribute="bottom" constant="217.66999999999999" id="3Sm-dB-o7o"/>
+                            <constraint firstItem="9Ei-C9-4el" firstAttribute="trailing" secondItem="Zsu-HU-b9A" secondAttribute="trailing" constant="60" id="5b0-ef-hbj"/>
+                            <constraint firstItem="9Ei-C9-4el" firstAttribute="trailing" secondItem="ffF-nd-3oE" secondAttribute="trailing" constant="60" id="7Ll-0a-iKY"/>
+                            <constraint firstItem="Zsu-HU-b9A" firstAttribute="top" secondItem="ffF-nd-3oE" secondAttribute="bottom" id="DMx-Qx-wgj"/>
+                            <constraint firstItem="ffF-nd-3oE" firstAttribute="top" secondItem="9Ei-C9-4el" secondAttribute="top" constant="193" id="Gcq-vi-1yU"/>
+                            <constraint firstItem="Zsu-HU-b9A" firstAttribute="top" secondItem="ffF-nd-3oE" secondAttribute="bottom" id="Pf9-df-tRJ"/>
+                            <constraint firstItem="Zsu-HU-b9A" firstAttribute="leading" secondItem="9Ei-C9-4el" secondAttribute="leading" constant="60" id="kqU-7c-DSb"/>
+                            <constraint firstItem="ffF-nd-3oE" firstAttribute="leading" secondItem="9Ei-C9-4el" secondAttribute="leading" constant="60" id="qjJ-dm-0Co"/>
+                        </constraints>
+                    </view>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="iYj-Kq-Ea1" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="53" y="375"/>
+        </scene>
+    </scenes>
+    <resources>
+        <image name="LandingBackground" width="800" height="450"/>
+        <image name="Logo" width="524" height="502"/>
+        <systemColor name="systemBackgroundColor">
+            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+    </resources>
+</document>
