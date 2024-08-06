@@ -194,16 +194,36 @@ class AuthenticationHandler {
                 completion(.failure(error))
                 return
             }
-            
-            // Update local profile
-            if var profile = UserState.shared.profile {
-                profile.username = newUsername
-                UserState.shared.profile = profile
-            }
-            
-            completion(.success(()))
         }
-    }
+        self.ref.child("posts").child(userId).updateChildValues(["username": newUsername]) { (error,ref) in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+        }
+        self.ref.child("stories").child(userId).updateChildValues(["username": newUsername]) { (error,ref) in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+        }
+        self.ref.child("comments").child(userId).updateChildValues(["username": newUsername]) { (error,ref) in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+        }
+                        
+                    
+                    // Update local profile
+                    if var profile = UserState.shared.profile {
+                        profile.username = newUsername
+                        UserState.shared.profile = profile
+                    }
+                    
+                    completion(.success(()))
+                }
+    
     
     static func updatePassword(newPassword: String, completion: @escaping (Result<Void, Error>) -> Void) {
         guard SessionManager.shared.isLoggedIn, let user = Auth.auth().currentUser else {
