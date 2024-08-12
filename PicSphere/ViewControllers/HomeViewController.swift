@@ -34,7 +34,7 @@ class HomeViewController: UIViewController {
         postsTable.delegate = self
         postsTable.dataSource = self
         postsTable.register(ProfileTableViewCell.nib(), forCellReuseIdentifier: ProfileTableViewCell.identifier)
-        postsTable.allowsSelection = true // Enable selection in table view
+        postsTable.allowsSelection = false
     }
     
     private func setupCollection() {
@@ -139,11 +139,9 @@ extension HomeViewController: UICollectionViewDataSource, UICollectionViewDelega
         cell.configure(story: story)
         return cell
     }
-    
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return CGSize(width: 75, height: 75) // Consider adjusting size based on content or device
+        return CGSize(width: 75, height: 75)
     }
-    
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let story = viewModel.story(at: indexPath.row)
         navigateToStory(story: story)

@@ -8,8 +8,8 @@
 import UIKit
 import FirebaseAuth
 
-class ViewProfileViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
-
+class ViewProfileViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, ProfileTableViewCellDelegate {
+  
     @IBOutlet weak var username: UILabel!
     @IBOutlet weak var profilePicture: UIImageView!
     @IBOutlet weak var postsCount: UILabel!
@@ -73,6 +73,11 @@ class ViewProfileViewController: UIViewController, UITableViewDelegate, UITableV
     @objc func refreshData() {
         fetchProfileData()
     }
+    
+    func reloadPostsTable() {
+        refreshData()
+    }
+    
     
     func fetchProfileData() {
         let targetUserId: String

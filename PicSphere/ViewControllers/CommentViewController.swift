@@ -60,7 +60,7 @@ class CommentViewController: UIViewController, UITableViewDelegate, UITableViewD
                present(alert, animated: true, completion: nil)
                return
            }
-
+            print(commentText)
            // Call the view model to upload the comment
            commentViewModel.uploadComment(commentText: commentText, postId: postId) { [weak self] result in
                switch result {

@@ -20,7 +20,8 @@ class ProfileTableViewCell: UITableViewCell, UICollectionViewDelegate, UICollect
     @IBOutlet weak var deletePostButton: UIImageView!
 
     static let identifier = "ProfileTableViewCell"
-
+    
+    var delegate:ProfileTableViewCellDelegate?
     var data: [String] = []
     var postData: PostModel?
     private var isLiked: Bool = false
@@ -120,7 +121,7 @@ class ProfileTableViewCell: UITableViewCell, UICollectionViewDelegate, UICollect
                 self.removePostFromLocalDataSource()
                 DispatchQueue.main.async {
                     // Reload collection view data or handle UI update if needed
-                    self.postsCollection.reloadData()
+                    self.delegate?.reloadPostsTable()
                 }
             case .failure(let error):
                 print("Failed to delete post: \(error.localizedDescription)")
@@ -140,6 +141,7 @@ class ProfileTableViewCell: UITableViewCell, UICollectionViewDelegate, UICollect
         postsCollection.performBatchUpdates({
             postsCollection.deleteItems(at: [indexPath])
         }, completion: nil)
+        
     }
 
     @objc func likePost(_ sender: UITapGestureRecognizer) {
@@ -238,4 +240,8 @@ extension UIView {
         }
         return nil
     }
+}
+
+protocol ProfileTableViewCellDelegate: AnyObject {
+    func reloadPostsTable()
 }

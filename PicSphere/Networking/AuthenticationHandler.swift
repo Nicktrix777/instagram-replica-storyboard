@@ -20,21 +20,58 @@ class AuthenticationHandler {
             return
         }
 
-        ref.child("users").child(userId).updateChildValues(["profilePictureURL": profilePictureURL]) { error, _ in
+        let updates: [String: Any] = ["profilePictureURL": profilePictureURL]
+        let ref = self.ref
+
+        ref.child("users").child(userId).updateChildValues(updates) { (error, _) in
             if let error = error {
                 completion(.failure(error))
                 return
             }
 
-            // Update local profile
-            if var profile = UserState.shared.profile {
-                profile.profilePictureURL = profilePictureURL
-                UserState.shared.profile = profile
-            }
+            // Update posts
+            ref.child("posts").queryOrdered(byChild: "userId").queryEqual(toValue: userId).observeSingleEvent(of: .value) { snapshot in
+                for child in snapshot.children {
+                    if let childSnapshot = child as? DataSnapshot {
+                        childSnapshot.ref.updateChildValues(updates)
+                    }
+                }
 
-            completion(.success(()))
+                // Update stories
+                ref.child("stories").queryOrdered(byChild: "userId").queryEqual(toValue: userId).observeSingleEvent(of: .value) { snapshot in
+                    for child in snapshot.children {
+                        if let childSnapshot = child as? DataSnapshot {
+                            childSnapshot.ref.updateChildValues(updates)
+                        }
+                    }
+
+                    // Update comments
+                    ref.child("comments").queryOrdered(byChild: "userId").queryEqual(toValue: userId).observeSingleEvent(of: .value) { snapshot in
+                        for child in snapshot.children {
+                            if let childSnapshot = child as? DataSnapshot {
+                                childSnapshot.ref.updateChildValues(updates)
+                            }
+                        }
+
+                        // Update local profile
+                        if var profile = UserState.shared.profile {
+                            profile.profilePictureURL = profilePictureURL
+                            UserState.shared.profile = profile
+                        }
+
+                        completion(.success(()))
+                    } withCancel: { error in
+                        completion(.failure(error))
+                    }
+                } withCancel: { error in
+                    completion(.failure(error))
+                }
+            } withCancel: { error in
+                completion(.failure(error))
+            }
         }
     }
+
     
     static func restoreUserSession(completion: @escaping (Result<Void, Error>) -> Void) {
         if let user = Auth.auth().currentUser {
@@ -189,40 +226,58 @@ class AuthenticationHandler {
             return
         }
         
-        self.ref.child("users").child(userId).updateChildValues(["username": newUsername]) { (error, ref) in
+        let updates: [String: Any] = ["username": newUsername]
+        let ref = self.ref
+        
+        ref.child("users").child(userId).updateChildValues(updates) { (error, _) in
             if let error = error {
                 completion(.failure(error))
                 return
             }
-        }
-        self.ref.child("posts").child(userId).updateChildValues(["username": newUsername]) { (error,ref) in
-            if let error = error {
-                completion(.failure(error))
-                return
-            }
-        }
-        self.ref.child("stories").child(userId).updateChildValues(["username": newUsername]) { (error,ref) in
-            if let error = error {
-                completion(.failure(error))
-                return
-            }
-        }
-        self.ref.child("comments").child(userId).updateChildValues(["username": newUsername]) { (error,ref) in
-            if let error = error {
-                completion(.failure(error))
-                return
-            }
-        }
-                        
-                    
-                    // Update local profile
-                    if var profile = UserState.shared.profile {
-                        profile.username = newUsername
-                        UserState.shared.profile = profile
+
+            // Update posts
+            ref.child("posts").queryOrdered(byChild: "userId").queryEqual(toValue: userId).observeSingleEvent(of: .value) { snapshot in
+                for child in snapshot.children {
+                    if let childSnapshot = child as? DataSnapshot {
+                        childSnapshot.ref.updateChildValues(updates)
+                    }
+                }
+                
+                // Update stories
+                ref.child("stories").queryOrdered(byChild: "userId").queryEqual(toValue: userId).observeSingleEvent(of: .value) { snapshot in
+                    for child in snapshot.children {
+                        if let childSnapshot = child as? DataSnapshot {
+                            childSnapshot.ref.updateChildValues(updates)
+                        }
                     }
                     
-                    completion(.success(()))
+                    // Update comments
+                    ref.child("comments").queryOrdered(byChild: "userId").queryEqual(toValue: userId).observeSingleEvent(of: .value) { snapshot in
+                        for child in snapshot.children {
+                            if let childSnapshot = child as? DataSnapshot {
+                                childSnapshot.ref.updateChildValues(updates)
+                            }
+                        }
+
+                        // Update local profile
+                        if var profile = UserState.shared.profile {
+                            profile.username = newUsername
+                            UserState.shared.profile = profile
+                        }
+
+                        completion(.success(()))
+                    } withCancel: { error in
+                        completion(.failure(error))
+                    }
+                } withCancel: { error in
+                    completion(.failure(error))
                 }
+            } withCancel: { error in
+                completion(.failure(error))
+            }
+        }
+    }
+
     
     
     static func updatePassword(newPassword: String, completion: @escaping (Result<Void, Error>) -> Void) {

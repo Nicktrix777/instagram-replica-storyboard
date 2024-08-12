@@ -181,8 +181,38 @@ class PostStorageHandler {
         }
     }
 
-    // Upload a profile picture
+    // Upload or replace a profile picture
     static func uploadProfilePicture(imageURL: URL, completion: @escaping (Result<String, Error>) -> Void) {
+        guard let currentUserId = UserState.shared.currentUserId else {
+            let error = NSError(domain: "com.yourdomain.yourapp", code: 401, userInfo: [NSLocalizedDescriptionKey: "No user is currently logged in"])
+            completion(.failure(error))
+            return
+        }
+
+        // Check if there's an existing profile picture URL
+        db.child("users").child(currentUserId).observeSingleEvent(of: .value) { snapshot in
+            guard let userDict = snapshot.value as? [String: Any],
+                  let currentProfilePictureURL = userDict["profilePictureURL"] as? String, !currentProfilePictureURL.isEmpty else {
+                // No existing profile picture, just upload the new one
+                uploadNewProfilePicture(imageURL: imageURL, completion: completion)
+                return
+            }
+
+            // Delete the old profile picture if it exists
+            let oldProfilePictureRef = storage.reference(forURL: currentProfilePictureURL)
+            oldProfilePictureRef.delete { error in
+                if let error = error {
+                    print("Failed to delete old profile picture: \(error.localizedDescription)")
+                }
+
+                // Upload the new profile picture
+                uploadNewProfilePicture(imageURL: imageURL, completion: completion)
+            }
+        }
+    }
+
+    // Upload a new profile picture and update the URL in the database
+    private static func uploadNewProfilePicture(imageURL: URL, completion: @escaping (Result<String, Error>) -> Void) {
         guard let image = UIImage(contentsOfFile: imageURL.path) else {
             let error = NSError(domain: "com.yourdomain.yourapp", code: 400, userInfo: [NSLocalizedDescriptionKey: "Failed to load image from URL"])
             completion(.failure(error))
@@ -215,170 +245,13 @@ class PostStorageHandler {
                     return
                 }
 
-                completion(.success(downloadURL.absoluteString))
-            }
-        }
-    }
-
-    // Replace a profile picture
-    static func replaceProfilePicture(newImageURL: URL, completion: @escaping (Result<Void, Error>) -> Void) {
-        guard let currentUserId = UserState.shared.currentUserId else {
-            let error = NSError(domain: "com.yourdomain.yourapp", code: 401, userInfo: [NSLocalizedDescriptionKey: "No user is currently logged in"])
-            completion(.failure(error))
-            return
-        }
-
-        db.child("users").child(currentUserId).observeSingleEvent(of: .value) { snapshot in
-            guard let userDict = snapshot.value as? [String: Any],
-                  let currentProfilePictureURL = userDict["profilePictureURL"] as? String else {
-                let error = NSError(domain: "com.yourdomain.yourapp", code: 404, userInfo: [NSLocalizedDescriptionKey: "Current profile picture URL not found"])
-                completion(.failure(error))
-                return
-            }
-
-            uploadProfilePicture(imageURL: newImageURL) { result in
-                switch result {
-                case .success(let newProfilePictureURL):
-                    let oldProfilePictureRef = storage.reference(forURL: currentProfilePictureURL)
-                    oldProfilePictureRef.delete { error in
-                        if let error = error {
-                            print("Failed to delete old profile picture: \(error.localizedDescription)")
-                        }
-
-                        db.child("users").child(currentUserId).updateChildValues(["profilePictureURL": newProfilePictureURL]) { error, _ in
-                            if let error = error {
-                                completion(.failure(error))
-                            } else {
-                                if var profile = UserState.shared.profile {
-                                    profile.profilePictureURL = newProfilePictureURL
-                                    UserState.shared.profile = profile
-                                }
-                                completion(.success(()))
-                            }
-                        }
-                    }
-                case .failure(let error):
-                    completion(.failure(error))
-                }
-            }
-        }
-    }
-
-    // Upload a comment
-    static func uploadComment(postId: String, commentText: String, completion: @escaping (Result<Void, Error>) -> Void) {
-        // Retrieve the current user's profile from UserState
-        guard let currentUserProfile = UserState.shared.profile else {
-            // Handle the case where the user profile is not available
-            let error = NSError(domain: "UserProfileError", code: 0, userInfo: [NSLocalizedDescriptionKey: "Current user profile is not available."])
-            completion(.failure(error))
-            return
-        }
-        
-        let commentId = UUID().uuidString // Generate a unique comment ID
-        let comment = CommentModel(
-            commentId: commentId,
-            postId: postId,
-            userId: currentUserProfile.userId,
-            username: currentUserProfile.username,
-            profilePictureURL: currentUserProfile.profilePictureURL ?? "",
-            commentText: commentText
-        )
-        
-        let commentRef = db.child("comments").child(comment.commentId)
-        let postRef = db.child("posts").child(comment.postId)
-        
-        let commentData = comment.toDictionary()
-        
-        commentRef.setValue(commentData) { error, _ in
-            if let error = error {
-                print("Database write error: \(error.localizedDescription)")
-                completion(.failure(error))
-                return
-            }
-            
-            postRef.child("commentCount").observeSingleEvent(of: .value) { snapshot in
-                var newCommentCount = 0
-                if let currentCount = snapshot.value as? Int {
-                    newCommentCount = currentCount + 1
-                } else {
-                    newCommentCount = 1
-                }
-                
-                postRef.child("commentCount").setValue(newCommentCount) { error, _ in
-                    if let error = error {
-                        print("Failed to update comment count: \(error.localizedDescription)")
+                // Update profile picture URL in the database
+                AuthenticationHandler.updateProfilePicture(profilePictureURL: downloadURL.absoluteString) { result in
+                    switch result {
+                    case .success():
+                        completion(.success(downloadURL.absoluteString))
+                    case .failure(let error):
                         completion(.failure(error))
-                    } else {
-                        print("Comment uploaded and comment count updated successfully")
-                        completion(.success(()))
-                    }
-                }
-            }
-        }
-    }
-
-    // Update the like count of a post
-    static func updatePostLikeCount(postId: String, isIncrement: Bool, completion: @escaping (Result<Void, Error>) -> Void) {
-        let postRef = db.child("posts").child(postId)
-
-        postRef.child("likeCount").observeSingleEvent(of: .value) { snapshot in
-            var newLikeCount = 0
-            if let currentCount = snapshot.value as? Int {
-                newLikeCount = isIncrement ? currentCount + 1 : max(currentCount - 1, 0)
-            } else {
-                newLikeCount = isIncrement ? 1 : 0
-            }
-
-            postRef.child("likeCount").setValue(newLikeCount) { error, _ in
-                if let error = error {
-                    print("Failed to update like count: \(error.localizedDescription)")
-                    completion(.failure(error))
-                } else {
-                    completion(.success(()))
-                }
-            }
-        }
-    }
-
-    // Delete a post
-    static func deletePost(postId: String, completion: @escaping (Result<Void, Error>) -> Void) {
-        let postRef = db.child("posts").child(postId)
-
-        postRef.observeSingleEvent(of: .value) { snapshot in
-            guard let postData = snapshot.value as? [String: Any],
-                  let postURLArray = postData["postURL"] as? [String],
-                  let postURLString = postURLArray.first else {
-                let error = NSError(domain: "com.yourdomain.yourapp", code: 404, userInfo: [NSLocalizedDescriptionKey: "Post not found"])
-                completion(.failure(error))
-                return
-            }
-
-            let storageRef = storage.reference(forURL: postURLString)
-            storageRef.delete { error in
-                if let error = error {
-                    print("Failed to delete image from storage: \(error.localizedDescription)")
-                    completion(.failure(error))
-                    return
-                }
-
-                postRef.removeValue { error, _ in
-                    if let error = error {
-                        print("Failed to delete post from database: \(error.localizedDescription)")
-                        completion(.failure(error))
-                    } else {
-                        print("Post deleted successfully")
-
-                        // Update the user's post count
-                        decrementPostCount(for: UserState.shared.currentUserId ?? "") { result in
-                            switch result {
-                            case .success():
-                                print("Post count updated successfully")
-                                completion(.success(()))
-                            case .failure(let error):
-                                print("Failed to update post count: \(error.localizedDescription)")
-                                completion(.failure(error))
-                            }
-                        }
                     }
                 }
             }
@@ -388,17 +261,18 @@ class PostStorageHandler {
     // Increment the post count for a user
     private static func incrementPostCount(for userId: String, completion: @escaping (Result<Void, Error>) -> Void) {
         let userRef = db.child("users").child(userId)
-        userRef.child("postCount").observeSingleEvent(of: .value) { snapshot in
-            var newPostCount = 0
-            if let currentCount = snapshot.value as? Int {
-                newPostCount = currentCount + 1
-            } else {
-                newPostCount = 1
+
+        userRef.observeSingleEvent(of: .value) { snapshot in
+            guard var userData = snapshot.value as? [String: Any],
+                  let currentPostCount = userData["postCount"] as? Int else {
+                let error = NSError(domain: "com.yourdomain.yourapp", code: 404, userInfo: [NSLocalizedDescriptionKey: "User data not found"])
+                completion(.failure(error))
+                return
             }
 
-            userRef.child("postCount").setValue(newPostCount) { error, _ in
+            userData["postCount"] = currentPostCount + 1
+            userRef.updateChildValues(userData) { error, _ in
                 if let error = error {
-                    print("Failed to update post count: \(error.localizedDescription)")
                     completion(.failure(error))
                 } else {
                     completion(.success(()))
@@ -406,21 +280,74 @@ class PostStorageHandler {
             }
         }
     }
+    
+    // Upload a new comment
+    static func uploadComment(postId: String, commentText: String, completion: @escaping (Result<Void, Error>) -> Void) {
+        // Ensure that the user is logged in
+        guard let userId = UserState.shared.currentUserId else {
+            let error = NSError(domain: "com.yourdomain.yourapp", code: 401, userInfo: [NSLocalizedDescriptionKey: "No user is currently logged in"])
+            completion(.failure(error))
+            return
+        }
 
-    // Decrement the post count for a user
-    private static func decrementPostCount(for userId: String, completion: @escaping (Result<Void, Error>) -> Void) {
-        let userRef = db.child("users").child(userId)
-        userRef.child("postCount").observeSingleEvent(of: .value) { snapshot in
-            var newPostCount = 0
-            if let currentCount = snapshot.value as? Int {
-                newPostCount = max(currentCount - 1, 0)
-            } else {
-                newPostCount = 0
+        // Generate a unique comment ID
+        let commentId = UUID().uuidString
+
+        // Create a new comment model
+        let newComment = CommentModel(
+            commentId: commentId,
+            postId: postId,
+            userId: userId,
+            username: UserState.shared.profile?.username ?? "",
+            profilePictureURL: UserState.shared.profile?.profilePictureURL ?? "",
+            commentText: commentText
+        )
+
+        // Reference to the comments node in the database
+        let commentsRef = db.child("comments").child(commentId)
+        
+        // Convert CommentModel to dictionary
+        let commentDict = newComment.toDictionary()
+
+        // Save the comment to the database
+        commentsRef.setValue(commentDict) { error, _ in
+            if let error = error {
+                print("Failed to upload comment: \(error.localizedDescription)")
+                completion(.failure(error))
+                return
             }
 
-            userRef.child("postCount").setValue(newPostCount) { error, _ in
+            print("Comment uploaded successfully")
+
+            // Update the comment count on the post
+            updateCommentCount(for: postId) { result in
+                switch result {
+                case .success():
+                    print("Comment count updated successfully")
+                    completion(.success(()))
+                case .failure(let error):
+                    print("Failed to update comment count: \(error.localizedDescription)")
+                    completion(.failure(error))
+                }
+            }
+        }
+    }
+
+    // Update the comment count for a post
+    private static func updateCommentCount(for postId: String, completion: @escaping (Result<Void, Error>) -> Void) {
+        let postRef = db.child("posts").child(postId)
+
+        postRef.observeSingleEvent(of: .value) { snapshot in
+            guard var postData = snapshot.value as? [String: Any],
+                  let currentCommentCount = postData["commentCount"] as? Int else {
+                let error = NSError(domain: "com.yourdomain.yourapp", code: 404, userInfo: [NSLocalizedDescriptionKey: "Post data not found"])
+                completion(.failure(error))
+                return
+            }
+
+            postData["commentCount"] = currentCommentCount + 1
+            postRef.updateChildValues(postData) { error, _ in
                 if let error = error {
-                    print("Failed to update post count: \(error.localizedDescription)")
                     completion(.failure(error))
                 } else {
                     completion(.success(()))
@@ -428,4 +355,66 @@ class PostStorageHandler {
             }
         }
     }
+    
+    static func updatePostCount(postCount:Int,completion: @escaping (Result<Void,Error>) -> Void) {
+        print("updatePostCount hit")
+        guard let currentUserId = UserState.shared.currentUserId else {
+            print("updatePostCount failed to fetch currentUserId")
+            return
+        }
+        print("updatePostCount fetched currentUserId succesfully")
+        let usersRef = db.child("users").child(currentUserId)
+        usersRef.observeSingleEvent(of: .value) { snapshot in
+            guard var userData = snapshot.value as? [String: Any] else {
+                print("updatePostCount failed to fetch fetch snapshot")
+                return
+            }
+            print("updatePostCount succesfully fetched the snapshot \(userData)")
+            userData["postCount"] = postCount
+            usersRef.updateChildValues(userData) { error, _ in
+                if let error = error {
+                    print("updatePostCount error in updating values")
+                    completion(.failure(error))
+                } else {
+                    print("updatePostCount successfully updated post count")
+                    completion(.success(()))
+                }
+            }
+        }
+        
+    }
+    
+
+    // Delete a post from the server
+    static func deletePost(postId: String, completion: @escaping (Result<Void, Error>) -> Void) {
+        // Reference to the post in the database
+        let postRef = db.child("posts").child(postId)
+        
+        // Delete the post's image from storage
+        let storageRef = storage.reference().child("posts/\(postId).png")
+
+        // Delete the image from Firebase Storage
+        storageRef.delete { error in
+            if let error = error {
+                // Handle the error if the image could not be deleted
+                print("Failed to delete post image: \(error.localizedDescription)")
+                completion(.failure(error))
+                return
+            }
+
+            // Delete the post data from Firebase Realtime Database
+            postRef.removeValue { error, _ in
+                if let error = error {
+                    // Handle the error if the post data could not be deleted
+                    print("Failed to delete post data: \(error.localizedDescription)")
+                    completion(.failure(error))
+                    return
+                }
+
+                print("Post and associated data deleted successfully")
+                completion(.success(()))
+            }
+        }
+    }
+    
 }

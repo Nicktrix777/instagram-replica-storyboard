@@ -16,8 +16,8 @@
                 <rect key="frame" x="0.0" y="0.0" width="100" height="75"/>
                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                 <subviews>
-                    <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" alignment="center" spacing="2" translatesAutoresizingMaskIntoConstraints="NO" id="jtn-ic-X4G">
-                        <rect key="frame" x="0.0" y="3" width="100" height="75"/>
+                    <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" alignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="jtn-ic-X4G">
+                        <rect key="frame" x="0.0" y="0.0" width="100" height="75"/>
                         <subviews>
                             <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="W88-sX-Xtn">
                                 <rect key="frame" x="20" y="0.0" width="60" height="60"/>
@@ -27,24 +27,23 @@
                                 </constraints>
                             </imageView>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="longestusernameever" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="FJq-jv-zG2">
-                                <rect key="frame" x="0.0" y="62" width="100" height="13"/>
+                                <rect key="frame" x="0.0" y="60" width="100" height="15"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="10"/>
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
                         </subviews>
-                        <constraints>
-                            <constraint firstAttribute="width" constant="100" id="2Q4-tM-m96"/>
-                            <constraint firstAttribute="height" constant="75" id="sHf-Gt-vIg"/>
-                        </constraints>
                     </stackView>
                 </subviews>
             </view>
             <viewLayoutGuide key="safeArea" id="ZTg-uK-7eu"/>
             <constraints>
+                <constraint firstAttribute="trailing" secondItem="jtn-ic-X4G" secondAttribute="trailing" id="LDJ-i3-auH"/>
                 <constraint firstItem="jtn-ic-X4G" firstAttribute="leading" secondItem="gTV-IL-0wX" secondAttribute="leading" id="Ydc-in-2Te"/>
+                <constraint firstItem="jtn-ic-X4G" firstAttribute="leading" secondItem="gTV-IL-0wX" secondAttribute="leading" id="ZAK-4a-4QU"/>
                 <constraint firstAttribute="trailing" secondItem="jtn-ic-X4G" secondAttribute="trailing" id="bgW-Qd-Hqh"/>
-                <constraint firstItem="jtn-ic-X4G" firstAttribute="top" secondItem="gTV-IL-0wX" secondAttribute="top" constant="3" id="fXj-Rd-b2B"/>
+                <constraint firstItem="jtn-ic-X4G" firstAttribute="top" secondItem="gTV-IL-0wX" secondAttribute="top" id="c0T-BT-hI1"/>
+                <constraint firstAttribute="bottom" secondItem="jtn-ic-X4G" secondAttribute="bottom" id="zQg-1k-WyJ"/>
             </constraints>
             <size key="customSize" width="100" height="75"/>
             <connections>

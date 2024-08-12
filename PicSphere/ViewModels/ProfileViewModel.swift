@@ -16,7 +16,6 @@ class ProfileViewModel {
         PostStorageHandler.uploadProfilePicture(imageURL: imageURL) { result in
             switch result {
             case .success(let newProfilePictureURL):
-                // Update the current user's profile with the new profile picture URL
                 AuthenticationHandler.updateProfilePicture(profilePictureURL: newProfilePictureURL) { result in
                     switch result {
                     case .success:

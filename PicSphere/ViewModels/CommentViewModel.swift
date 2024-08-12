@@ -64,20 +64,20 @@ class CommentViewModel {
             return
         }
         
-        // Call the updated uploadComment function in PostStorageHandler
+
         PostStorageHandler.uploadComment(postId: postId, commentText: commentText) { result in
             switch result {
             case .success:
-                // If the comment was successfully uploaded, update the local comments array
+                
                 let newComment = CommentModel(
-                    commentId: UUID().uuidString, // You might want to generate this ID based on actual storage or handle it differently
+                    commentId: UUID().uuidString,
                     postId: postId,
                     userId: userId,
                     username: UserState.shared.profile?.username ?? "",
                     profilePictureURL: UserState.shared.profile?.profilePictureURL ?? "",
                     commentText: commentText
                 )
-                self.comments.append(newComment) // Add the new comment to the list
+                self.comments.append(newComment)
                 completion(.success(()))
             case .failure(let error):
                 completion(.failure(error))

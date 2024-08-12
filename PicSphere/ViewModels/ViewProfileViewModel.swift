@@ -31,6 +31,7 @@ class ViewProfileViewModel {
             switch result {
             case .success(let posts):
                 self.userPosts = posts
+                self.updatePostCount()
                 completion(.success(posts))
             case .failure(let error):
                 completion(.failure(error))
@@ -118,5 +119,18 @@ class ViewProfileViewModel {
                 completion(false)
             }
         }
+    }
+    
+    func updatePostCount() {
+        let postCount = userPosts.count
+        PostStorageHandler.updatePostCount(postCount: postCount) { result in
+            switch result {
+            case .success(()):
+                print("succesfully updated post count")
+            case .failure(let error):
+                print("error while updating post count \(error.localizedDescription)")
+            }
+        }
+
     }
 }
